@@ -253,76 +253,85 @@
       access.includes('regular') ||
       access.includes('all');
 
+    const seUserArgPattern = /\$\((args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i;
+    const seExternalArgPattern = /\$\((args|[0-9]+|touser)/i;
+    const seArgTemplatePattern = /\$\{\d+:/i;
+
+    const nbUserArgPattern = /\$\((query|querystring|[0-9]+|touser)/i;
+
     if (cmd.provider === 'streamelements') {
-      if (isPublic && /^[\s]*\$\((args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i.test(resp)) {
+      if (isPublic && seUserArgPattern.test(resp)) {
         issues.push({
           severity: 'Critical',
           type: 'TwitchCommandInjection',
-          message: 'Response begins with user-controlled text.',
-          fix: 'Add static text before variables or restrict to mods.'
+          message: 'Response uses directly user-controlled text (args/$(1)/…/lastmessage).',
+          fix: 'Add static text before variables or restrict this command to mods only.'
         });
       }
-      if (/\$\(set(title|game)/i.test(resp) &&
-          /\$\((args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i.test(resp)) {
+
+      if (/\$\(set(title|game)/i.test(resp) && seUserArgPattern.test(resp)) {
         issues.push({
           severity: isPublic ? 'High' : 'Medium',
           type: 'MetadataHijack',
-          message: 'User input used in $(settitle) or $(setgame).',
-          fix: 'Restrict to mods and avoid passing raw arguments.'
+          message: 'User input is used inside $(settitle) or $(setgame).',
+          fix: 'Restrict this command to mods and avoid passing raw arguments into metadata setters.'
         });
       }
+
       if (/\$\(customapi|\$\(urlfetch/i.test(resp) &&
-          (/\$\((args|[0-9]+|touser)/i.test(resp) || /\$\{\d+:/i.test(resp))) {
+          (seExternalArgPattern.test(resp) || seArgTemplatePattern.test(resp))) {
         issues.push({
           severity: 'High',
           type: 'ExternalRequestInjection',
-          message: 'User input flows into external fetch.',
-          fix: 'Use fixed URLs with encoded parameters.'
+          message: 'User-controlled arguments flow into $(customapi)/$(urlfetch).',
+          fix: 'Use fixed URLs and only append sanitized, encoded values; avoid piping raw args/query into external requests.'
         });
       }
-      if (/\$\(ai/i.test(resp) &&
-          /\$\((args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i.test(resp)) {
+
+      if (/\$\(ai/i.test(resp) && seUserArgPattern.test(resp)) {
         issues.push({
           severity: 'Medium',
           type: 'AIPromptControl',
-          message: 'User input feeds AI prompt.',
-          fix: 'Limit input scope and keep prompts mostly static.'
+          message: 'User input is injected into the $(ai) prompt.',
+          fix: 'Keep AI prompts mostly static and avoid feeding full user messages or arbitrary args into $(ai).'
         });
       }
-      if (/\$\(repeat/i.test(resp) &&
-          /\$\((args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i.test(resp)) {
+
+      if (/\$\(repeat/i.test(resp) && seUserArgPattern.test(resp)) {
         issues.push({
           severity: 'Medium',
           type: 'SpamAmplifier',
-          message: '$(repeat) used with untrusted input.',
-          fix: 'Avoid repeating raw viewer input or cap repetitions.'
+          message: '$(repeat) is used with untrusted user input.',
+          fix: 'Avoid repeating raw viewer input, or limit repetitions and add static wrappers.'
         });
       }
     }
 
     if (cmd.provider === 'nightbot') {
-      if (isPublic && /^[\s]*\$\((query|querystring|[0-9]+|touser)/i.test(resp)) {
+      if (isPublic && nbUserArgPattern.test(resp)) {
         issues.push({
           severity: 'Critical',
           type: 'TwitchCommandInjection',
-          message: 'Response begins with $(query) or $(1)/$(2)/…',
-          fix: 'Add static prefixes or restrict to mods.'
+          message: 'Response uses $(query)/$(querystring)/$(1)/$(2)/… or $(touser) directly.',
+          fix: 'Add static prefixes/suffixes or restrict this command to mods only.'
         });
       }
-      if (/\$\(eval/i.test(resp) && /\$\((query|querystring|[0-9]+)/i.test(resp)) {
+
+      if (/\$\(eval/i.test(resp) && nbUserArgPattern.test(resp)) {
         issues.push({
           severity: 'High',
           type: 'EvalInjection',
-          message: 'User input reaches $(eval).',
-          fix: 'Avoid eval on raw user input.'
+          message: 'User input is passed into $(eval).',
+          fix: 'Do not call $(eval) with raw user input; refactor to static logic or remove eval.'
         });
       }
+
       if (/\$\(urlfetch/i.test(resp) && /\$\((query|querystring)/i.test(resp)) {
         issues.push({
           severity: 'High',
           type: 'ExternalRequestInjection',
-          message: 'User influences urlfetch URL.',
-          fix: 'Use fixed URLs and encoded parameters.'
+          message: 'User input influences $(urlfetch) target URL.',
+          fix: 'Use fixed URLs with controlled query parameters instead of passing $(query) directly.'
         });
       }
     }
@@ -393,5 +402,6 @@
   }
 </script>
 
+  
 </body>
 </html>
