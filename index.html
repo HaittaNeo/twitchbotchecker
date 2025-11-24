@@ -106,9 +106,8 @@
   <div class="card">
     <h2>Step 1 – StreamElements (optional)</h2>
     <ol class="small">
-      <li>Go to <code>https://streamelements.com/YOURUSERNAME/commands/custom</code> while logged in.</li>
-      <li>Switch to the view that shows your custom commands in a table.</li>
-      <li>Select the whole table (from <code>Command / Permissions / Response / Cost</code> downwards) and copy it (Ctrl+A, Ctrl+C if needed).</li>
+      <li>Go to <code>https://streamelements.com/YOURUSERNAME/commands/custom</code> Replacing YOURUSERNAME with your actual twitch username.</li>
+      <li>Select the whole table of commands (Ctrl+A, Ctrl+C if needed its fine if the whole page is copied).</li>
       <li>Paste it into the box below.</li>
     </ol>
     <label for="seInput">StreamElements custom commands table (tab-separated)</label>
@@ -118,7 +117,7 @@
   <div class="card">
     <h2>Step 2 – Nightbot (optional)</h2>
     <ol class="small">
-      <li>Go to <code>https://nightbot.tv/t/YOURUSERNAME/commands</code> while logged in.</li>
+      <li>Go to <code>https://nightbot.tv/t/YOURUSERNAME/commands</code> Replacing YOURUSERNAME with your actual twitch username.</li>
       <li>Press <strong>Ctrl+A</strong> then <strong>Ctrl+C</strong> to copy the full commands list area (like the example you showed).</li>
       <li>Paste it into the box below.</li>
     </ol>
@@ -253,29 +252,37 @@
       access.includes('regular') ||
       access.includes('all');
 
-    // StreamElements: catch $(...) and ${...} forms
-    const seUserArgPattern =
+    // SE: any use of dangerous arg variables
+    const seUserArgAnywhere =
       /\$(?:\(|\{)(args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i;
+    // SE: response starts with dangerous arg variable (after trimming and stripping /me)
+    const seUserArgAtStart =
+      /^\$(?:\(|\{)(args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i;
     const seExternalArgPattern =
       /\$(?:\(|\{)(args|[0-9]+|touser)/i;
     const seArgTemplatePattern =
-      /\$\{[0-9]+[:}]/i; // matches ${1:foo} or ${1}
+      /\$\{[0-9]+[:}]/i;
 
     // Nightbot
     const nbUserArgPattern =
       /\$\((query|querystring|[0-9]+|touser)/i;
 
     if (cmd.provider === 'streamelements') {
-      if (isPublic && seUserArgPattern.test(resp)) {
+      let normalized = resp.trimStart();
+      if (/^\/me\b/i.test(normalized)) {
+        normalized = normalized.replace(/^\/me\b/i, '').trimStart();
+      }
+
+      if (isPublic && seUserArgAtStart.test(normalized)) {
         issues.push({
           severity: 'Critical',
           type: 'TwitchCommandInjection',
-          message: 'Response uses directly user-controlled text (args/$(1)/${1}/lastmessage).',
+          message: 'Response begins with directly user-controlled text (args/$(1)/${1}/lastmessage).',
           fix: 'Add static text before variables or restrict this command to mods only.'
         });
       }
 
-      if (/\$\(set(title|game)/i.test(resp) && seUserArgPattern.test(resp)) {
+      if (/\$\(set(title|game)/i.test(resp) && seUserArgAnywhere.test(resp)) {
         issues.push({
           severity: isPublic ? 'High' : 'Medium',
           type: 'MetadataHijack',
@@ -294,7 +301,7 @@
         });
       }
 
-      if (/\$\(ai/i.test(resp) && seUserArgPattern.test(resp)) {
+      if (/\$\(ai/i.test(resp) && seUserArgAnywhere.test(resp)) {
         issues.push({
           severity: 'Medium',
           type: 'AIPromptControl',
@@ -303,7 +310,7 @@
         });
       }
 
-      if (/\$\(repeat/i.test(resp) && seUserArgPattern.test(resp)) {
+      if (/\$\(repeat/i.test(resp) && seUserArgAnywhere.test(resp)) {
         issues.push({
           severity: 'Medium',
           type: 'SpamAmplifier',
@@ -407,6 +414,7 @@
     return (!str || str.length <= max) ? str : str.slice(0, max) + '…';
   }
 </script>
+
 
 
   
