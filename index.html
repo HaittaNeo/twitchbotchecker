@@ -253,18 +253,24 @@
       access.includes('regular') ||
       access.includes('all');
 
-    const seUserArgPattern = /\$\((args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i;
-    const seExternalArgPattern = /\$\((args|[0-9]+|touser)/i;
-    const seArgTemplatePattern = /\$\{\d+:/i;
+    // StreamElements: catch $(...) and ${...} forms
+    const seUserArgPattern =
+      /\$(?:\(|\{)(args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i;
+    const seExternalArgPattern =
+      /\$(?:\(|\{)(args|[0-9]+|touser)/i;
+    const seArgTemplatePattern =
+      /\$\{[0-9]+[:}]/i; // matches ${1:foo} or ${1}
 
-    const nbUserArgPattern = /\$\((query|querystring|[0-9]+|touser)/i;
+    // Nightbot
+    const nbUserArgPattern =
+      /\$\((query|querystring|[0-9]+|touser)/i;
 
     if (cmd.provider === 'streamelements') {
       if (isPublic && seUserArgPattern.test(resp)) {
         issues.push({
           severity: 'Critical',
           type: 'TwitchCommandInjection',
-          message: 'Response uses directly user-controlled text (args/$(1)/…/lastmessage).',
+          message: 'Response uses directly user-controlled text (args/$(1)/${1}/lastmessage).',
           fix: 'Add static text before variables or restrict this command to mods only.'
         });
       }
@@ -401,6 +407,7 @@
     return (!str || str.length <= max) ? str : str.slice(0, max) + '…';
   }
 </script>
+
 
   
 </body>
