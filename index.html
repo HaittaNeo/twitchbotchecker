@@ -106,8 +106,8 @@
   <div class="card">
     <h2>Step 1 – StreamElements (optional)</h2>
     <ol class="small">
-      <li>Go to <code>https://streamelements.com/YOURUSERNAME/commands/custom</code> Replacing YOURUSERNAME with your actual twitch username.</li>
-      <li>Select the whole table of commands (Ctrl+A, Ctrl+C if needed its fine if the whole page is copied).</li>
+      <li>Go to <code>https://streamelements.com/YOURUSERNAME/commands/custom</code> replacing <code>YOURUSERNAME</code> with your Twitch username.</li>
+      <li>Select the whole table of commands (Ctrl+A, Ctrl+C if needed – it’s fine if the whole page is copied).</li>
       <li>Paste it into the box below.</li>
     </ol>
     <label for="seInput">StreamElements custom commands table (tab-separated)</label>
@@ -117,8 +117,8 @@
   <div class="card">
     <h2>Step 2 – Nightbot (optional)</h2>
     <ol class="small">
-      <li>Go to <code>https://nightbot.tv/t/YOURUSERNAME/commands</code> Replacing YOURUSERNAME with your actual twitch username.</li>
-      <li>Press <strong>Ctrl+A</strong> then <strong>Ctrl+C</strong> to copy the full commands list area (like the example you showed).</li>
+      <li>Go to <code>https://nightbot.tv/t/YOURUSERNAME/commands</code> replacing <code>YOURUSERNAME</code> with your Twitch username.</li>
+      <li>Press <strong>Ctrl+A</strong> then <strong>Ctrl+C</strong> to copy the full commands list area.</li>
       <li>Paste it into the box below.</li>
     </ol>
     <label for="nbInput">Nightbot commands page content (multi-line, as copied)</label>
@@ -252,10 +252,8 @@
       access.includes('regular') ||
       access.includes('all');
 
-    // SE: any use of dangerous arg variables
     const seUserArgAnywhere =
       /\$(?:\(|\{)(args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i;
-    // SE: response starts with dangerous arg variable (after trimming and stripping /me)
     const seUserArgAtStart =
       /^\$(?:\(|\{)(args|[0-9]+|touser|sender\.lastmessage|user\.lastmessage)/i;
     const seExternalArgPattern =
@@ -263,9 +261,13 @@
     const seArgTemplatePattern =
       /\$\{[0-9]+[:}]/i;
 
-    // Nightbot
     const nbUserArgPattern =
       /\$\((query|querystring|[0-9]+|touser)/i;
+
+    const makeExampleFix = (badResponse) => {
+      const clean = (badResponse || '').trimStart();
+      return `Viewer said: ${clean}`;
+    };
 
     if (cmd.provider === 'streamelements') {
       let normalized = resp.trimStart();
@@ -278,7 +280,8 @@
           severity: 'Critical',
           type: 'TwitchCommandInjection',
           message: 'Response begins with directly user-controlled text (args/$(1)/${1}/lastmessage).',
-          fix: 'Add static text before variables or restrict this command to mods only.'
+          fix: 'Add static text before variables or restrict this command to mods only.',
+          exampleFix: makeExampleFix(resp)
         });
       }
 
@@ -287,17 +290,19 @@
           severity: isPublic ? 'High' : 'Medium',
           type: 'MetadataHijack',
           message: 'User input is used inside $(settitle) or $(setgame).',
-          fix: 'Restrict this command to mods and avoid passing raw arguments into metadata setters.'
+          fix: 'Restrict this command to mods and avoid passing raw arguments into metadata setters.',
+          exampleFix: resp.replace(/\$(?:\(|\{)(args|[0-9]+|touser).*?\)?/i, '(user input sanitized)')
         });
       }
 
-      if (/\$\(customapi|\$\(urlfetch/i.test(resp) &&
+      if (/\$\(customapi|\$\(urlfetch)/i.test(resp) &&
           (seExternalArgPattern.test(resp) || seArgTemplatePattern.test(resp))) {
         issues.push({
           severity: 'High',
           type: 'ExternalRequestInjection',
           message: 'User-controlled arguments flow into $(customapi)/$(urlfetch).',
-          fix: 'Use fixed URLs and only append sanitized, encoded values; avoid piping raw args/query into external requests.'
+          fix: 'Use fixed URLs and only append sanitized, encoded values; avoid piping raw args/query into external requests.',
+          exampleFix: resp.replace(/\$(args|\([0-9]+\)|\{[0-9]+:?)\}?/gi, 'SAFE_VALUE')
         });
       }
 
@@ -306,7 +311,8 @@
           severity: 'Medium',
           type: 'AIPromptControl',
           message: 'User input is injected into the $(ai) prompt.',
-          fix: 'Keep AI prompts mostly static and avoid feeding full user messages or arbitrary args into $(ai).'
+          fix: 'Keep AI prompts mostly static and avoid feeding full user messages or arbitrary args into $(ai).',
+          exampleFix: resp.replace(/\$(args|\([0-9]+\)|\{[0-9]+:?)\}?/gi, '')
         });
       }
 
@@ -315,7 +321,8 @@
           severity: 'Medium',
           type: 'SpamAmplifier',
           message: '$(repeat) is used with untrusted user input.',
-          fix: 'Avoid repeating raw viewer input, or limit repetitions and add static wrappers.'
+          fix: 'Avoid repeating raw viewer input, or limit repetitions and add static wrappers.',
+          exampleFix: resp.replace(/\$(args|\([0-9]+\)|\{[0-9]+:?)\}?/gi, 'SAFE_TEXT')
         });
       }
     }
@@ -326,7 +333,8 @@
           severity: 'Critical',
           type: 'TwitchCommandInjection',
           message: 'Response uses $(query)/$(querystring)/$(1)/$(2)/… or $(touser) directly.',
-          fix: 'Add static prefixes/suffixes or restrict this command to mods only.'
+          fix: 'Add static prefixes/suffixes or restrict this command to mods only.',
+          exampleFix: makeExampleFix(resp)
         });
       }
 
@@ -335,7 +343,8 @@
           severity: 'High',
           type: 'EvalInjection',
           message: 'User input is passed into $(eval).',
-          fix: 'Do not call $(eval) with raw user input; refactor to static logic or remove eval.'
+          fix: 'Do not call $(eval) with raw user input; refactor to static logic or remove eval.',
+          exampleFix: resp.replace(/\$\(eval.*\)/i, '$(eval "SAFE_STATIC_CODE")')
         });
       }
 
@@ -344,7 +353,8 @@
           severity: 'High',
           type: 'ExternalRequestInjection',
           message: 'User input influences $(urlfetch) target URL.',
-          fix: 'Use fixed URLs with controlled query parameters instead of passing $(query) directly.'
+          fix: 'Use fixed URLs with controlled query parameters instead of passing $(query) directly.',
+          exampleFix: resp.replace(/\$\(urlfetch.*\)/i, '$(urlfetch "https://safe.example.com")')
         });
       }
     }
@@ -358,6 +368,9 @@
       if (!cmd.issues.length) return;
       cmd.issues.forEach(issue => {
         const cls = issue.severity.toLowerCase();
+        const exampleHtml = issue.exampleFix
+          ? `<div class="small" style="margin-top:.25rem;"><strong>Example Fix:</strong> <code>${escape(shorten(issue.exampleFix,160))}</code></div>`
+          : '';
         rows.push(`
           <tr>
             <td>${escape(cmd.provider)}</td>
@@ -370,6 +383,7 @@
             <td>
               <div class="small">${escape(issue.message)}</div>
               <div class="small" style="margin-top:.25rem;"><strong>Fix:</strong> ${escape(issue.fix)}</div>
+              ${exampleHtml}
               <div class="small" style="margin-top:.25rem;"><strong>Response:</strong> <code>${escape(shorten(cmd.response,160))}</code></div>
             </td>
           </tr>
@@ -415,8 +429,5 @@
   }
 </script>
 
-
-
-  
 </body>
 </html>
