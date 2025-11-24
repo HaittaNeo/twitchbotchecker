@@ -6,14 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: system-ui, sans-serif;
       margin: 0;
       padding: 1.5rem;
       background: #050816;
       color: #f5f5f5;
     }
-    h1, h2, h3 {
-      margin: 0 0 0.75rem 0;
+    h1, h2 {
+      margin: 0 0 .75rem 0;
     }
     .card {
       background: #0b1020;
@@ -24,7 +24,7 @@
     }
     label {
       display: inline-block;
-      margin-bottom: 0.25rem;
+      margin-bottom: .25rem;
     }
     textarea {
       width: 100%;
@@ -33,14 +33,14 @@
       color: #f5f5f5;
       border-radius: 4px;
       border: 1px solid rgba(255,255,255,0.15);
-      padding: 0.5rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.8rem;
+      padding: .5rem;
+      font-family: ui-monospace, monospace;
+      font-size: .85rem;
       white-space: pre;
     }
     button {
-      margin-top: 0.6rem;
-      padding: 0.45rem 0.9rem;
+      margin-top: .6rem;
+      padding: .45rem .9rem;
       border-radius: 4px;
       border: none;
       background: #2563eb;
@@ -49,89 +49,78 @@
       cursor: pointer;
     }
     button:disabled {
-      opacity: 0.6;
+      opacity: .6;
       cursor: default;
     }
     .small {
-      font-size: 0.8rem;
-      opacity: 0.85;
+      font-size: .8rem;
+      opacity: .85;
     }
     .badge {
       display: inline-block;
-      padding: 0.1rem 0.45rem;
+      padding: .1rem .45rem;
       border-radius: 999px;
-      font-size: 0.7rem;
-      margin-right: 0.4rem;
+      font-size: .7rem;
+      margin-right: .4rem;
     }
     .critical { background: #b91c1c; }
-    .high     { background: #ea580c; }
-    .medium   { background: #ca8a04; }
-    .info     { background: #1d4ed8; }
+    .high { background: #ea580c; }
+    .medium { background: #ca8a04; }
+    .info { background: #1d4ed8; }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 0.5rem;
-      font-size: 0.85rem;
+      margin-top: .5rem;
+      font-size: .85rem;
     }
     th, td {
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      padding: 0.4rem;
+      padding: .4rem;
       vertical-align: top;
     }
     th {
+      background: rgba(15,23,42,0.8);
       text-align: left;
       font-weight: 600;
-      background: rgba(15,23,42,0.8);
     }
     code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.8rem;
+      font-family: ui-monospace, monospace;
+      font-size: .8rem;
       background: rgba(15,23,42,0.9);
-      padding: 0.05rem 0.2rem;
+      padding: .05rem .2rem;
       border-radius: 3px;
-    }
-    a {
-      color: #60a5fa;
     }
   </style>
 </head>
 <body>
+
   <div class="card">
     <h1>Bot Command Safety Checker</h1>
     <p class="small">
-      Paste your <strong>StreamElements</strong> and/or <strong>Nightbot</strong> custom commands here, and this page
-      will flag risky patterns where viewers might be able to hijack your bot’s moderator powers or external calls.<br>
-      Everything runs <strong>locally in your browser</strong>. No commands are uploaded anywhere.
+      Paste your StreamElements and Nightbot command pages. This page detects dangerous patterns
+      like command injection, URL hijacking, eval abuse, and unsafe dynamic responses.
+      All processing happens locally in your browser.
     </p>
   </div>
 
   <div class="card">
-    <h2>Step 1 – StreamElements (optional)</h2>
-    <ol class="small">
-      <li>Go to <code>https://streamelements.com/YOURUSERNAME/commands/custom</code> while logged in.</li>
-      <li>Switch to the view that shows your custom commands in a table.</li>
-      <li>Select the whole table (from <code>Command / Permissions / Response / Cost</code> downwards) and copy it.</li>
-      <li>Paste it into the box below.</li>
-    </ol>
-    <label for="seInput">StreamElements custom commands table (tab-separated)</label>
-    <textarea id="seInput" placeholder="Paste your StreamElements commands table here..."></textarea>
+    <h2>StreamElements</h2>
+    <p class="small">Copy the full custom commands table and paste it below.</p>
+    <label for="seInput">StreamElements commands</label>
+    <textarea id="seInput"></textarea>
   </div>
 
   <div class="card">
-    <h2>Step 2 – Nightbot (optional)</h2>
-    <ol class="small">
-      <li>Go to <code>https://nightbot.tv/t/YOURUSERNAME/commands</code> while logged in.</li>
-      <li>Copy the commands table (or export, then copy).</li>
-      <li>Paste it into the box below.</li>
-    </ol>
-    <label for="nbInput">Nightbot custom commands table (tab-separated)</label>
-    <textarea id="nbInput" placeholder="Paste your Nightbot commands table here..."></textarea>
+    <h2>Nightbot</h2>
+    <p class="small">Copy the entire commands page (Ctrl+A, Ctrl+C) and paste it below.</p>
+    <label for="nbInput">Nightbot commands</label>
+    <textarea id="nbInput"></textarea>
   </div>
 
   <div class="card">
-    <h2>Step 3 – Analyze</h2>
-    <button id="scanBtn">Scan pasted commands</button>
-    <div id="status" class="small" style="margin-top:0.4rem;"></div>
+    <h2>Analyze</h2>
+    <button id="scanBtn">Scan</button>
+    <div id="status" class="small" style="margin-top:.4rem;"></div>
   </div>
 
   <div id="resultsCard" class="card" style="display:none;">
@@ -147,124 +136,149 @@
 
   scanBtn.addEventListener('click', () => {
     statusEl.textContent = 'Analyzing...';
-
     const seText = document.getElementById('seInput').value || '';
     const nbText = document.getElementById('nbInput').value || '';
-
     const commands = [];
-    if (seText.trim()) {
-      commands.push(...parseTabbedCommands(seText, 'streamelements'));
-    }
-    if (nbText.trim()) {
-      commands.push(...parseTabbedCommands(nbText, 'nightbot'));
-    }
-
+    if (seText.trim()) commands.push(...parseTabbedCommands(seText, 'streamelements'));
+    if (nbText.trim()) commands.push(...parseNightbotText(nbText));
     if (!commands.length) {
-      statusEl.textContent = 'No commands detected. Make sure you pasted the tables (including header row).';
+      statusEl.textContent = 'No commands detected.';
       resultsCard.style.display = 'none';
       return;
     }
-
     const analyzed = analyzeAll(commands);
     renderResults(analyzed);
     resultsCard.style.display = 'block';
-    statusEl.textContent = 'Scan complete.';
+    statusEl.textContent = 'Done.';
   });
 
   function parseTabbedCommands(text, provider) {
-    const commands = [];
+    const cmds = [];
     const lines = text.split(/\r?\n/);
-    for (const rawLine of lines) {
-      const line = rawLine.trim();
-      if (!line) continue;
-
-      if (/^command$/i.test(line) || /^permissions$/i.test(line) || /^response$/i.test(line)) {
-        continue;
-      }
-      if (/^command\s*$/i.test(line)) continue;
-
-      const parts = rawLine.split('\t');
+    for (const raw of lines) {
+      if (!raw.trim()) continue;
+      const parts = raw.split('\t');
       if (parts.length < 3) continue;
-
-      const name = parts[0].trim();
-      const access = parts[1].trim();
-      const response = parts[2].trim();
-
-      if (!name.startsWith('!')) continue;
-
-      commands.push({
+      if (parts[0].trim().toLowerCase() === 'command') continue;
+      if (!parts[0].trim().startsWith('!')) continue;
+      cmds.push({
         provider,
-        name,
-        accessLevel: access,
-        response
+        name: parts[0].trim(),
+        accessLevel: parts[1].trim(),
+        response: parts[2].trim()
       });
     }
-    return commands;
+    return cmds;
   }
 
+  function parseNightbotText(text) {
+    const cmds = [];
+    const lines = text.split(/\r?\n/);
+    let current = null;
+    const isPerm = l => /^(everyone|moderator|owner|regular|subscribers?|vip)/i.test(l);
+    const ignore = l =>
+      /^nightbot$/i.test(l) ||
+      /commands are used/i.test(l) ||
+      /^search commands/i.test(l) ||
+      /^show\s+\d+/i.test(l) ||
+      /^page\s+\d+/i.test(l) ||
+      /^copyright/i.test(l) ||
+      /terms of service/i.test(l) ||
+      /privacy policy/i.test(l) ||
+      /api documentation/i.test(l);
+
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line || ignore(line)) continue;
+      if (line.startsWith('!')) {
+        if (current && current.name && current.permission) {
+          cmds.push({
+            provider: 'nightbot',
+            name: current.name,
+            accessLevel: current.permission,
+            response: current.response.trim()
+          });
+        }
+        current = { name: line, response: '', permission: '' };
+        continue;
+      }
+      if (current && isPerm(line)) {
+        current.permission = line;
+        continue;
+      }
+      if (current) {
+        if (current.response) current.response += ' ';
+        current.response += line;
+      }
+    }
+
+    if (current && current.name && current.permission) {
+      cmds.push({
+        provider: 'nightbot',
+        name: current.name,
+        accessLevel: current.permission,
+        response: current.response.trim()
+      });
+    }
+    return cmds;
+  }
 
   function analyzeAll(commands) {
-    return commands.map(cmd => ({
-      ...cmd,
-      issues: analyzeCommand(cmd)
-    }));
+    return commands.map(cmd => ({ ...cmd, issues: analyze(cmd) }));
   }
 
-  function analyzeCommand(cmd) {
+  function analyze(cmd) {
     const issues = [];
     const resp = cmd.response || '';
     const access = (cmd.accessLevel || '').toLowerCase();
-    const isPublic = access.includes('everyone') || access.includes('regular') || access.includes('all');
-
+    const isPublic =
+      access.includes('everyone') ||
+      access.includes('regular') ||
+      access.includes('all');
 
     if (cmd.provider === 'streamelements') {
-
       if (isPublic && /^[\s]*\$\((args|1|touser|sender\.lastmessage|user\.lastmessage)/i.test(resp)) {
         issues.push({
           severity: 'Critical',
           type: 'TwitchCommandInjection',
-          message: 'Response begins with user-controlled text (e.g. $(args)). A viewer could make your bot send Twitch slash commands like /emoteonly as a moderator.',
-          fix: 'Add static text before the variable (e.g. "You said: $(args)") or restrict this command to mods only.'
+          message: 'Response begins with user-controlled text.',
+          fix: 'Add static text before variables or restrict to mods.'
         });
       }
-
       if (/\$\(set(title|game)/i.test(resp) &&
           /\$\((args|1|touser|sender\.lastmessage|user\.lastmessage)/i.test(resp)) {
         issues.push({
           severity: isPublic ? 'High' : 'Medium',
           type: 'MetadataHijack',
-          message: 'Untrusted viewer input flows into $(settitle) or $(setgame). Viewers may be able to change your stream title/category.',
-          fix: 'Restrict this command to mods, and avoid passing raw arguments directly into $(settitle)/$(setgame).'
+          message: 'User input used in $(settitle) or $(setgame).',
+          fix: 'Restrict to mods and avoid passing raw arguments.'
         });
       }
-
       if (/\$\(customapi|\$\(urlfetch/i.test(resp) &&
-          /\$\((args|1|touser)|\$\{1:/i.test(resp)) {
+          (/\$\((args|1|touser)/i.test(resp) || /\$\{1:/i.test(resp))) {
         issues.push({
           severity: 'High',
           type: 'ExternalRequestInjection',
-          message: 'Viewers can influence URLs used in $(customapi) or $(urlfetch). This can be abused to fetch arbitrary external content.',
-          fix: 'Use fixed URLs and only interpolate safely encoded, limited parameters. Do not let viewers control the full URL.'
+          message: 'User input flows into external fetch.',
+          fix: 'Use fixed URLs with encoded parameters.'
         });
       }
-
       if (/\$\(ai/i.test(resp) &&
           /\$\((args|1|touser|sender\.lastmessage|user\.lastmessage)/i.test(resp)) {
         issues.push({
           severity: 'Medium',
           type: 'AIPromptControl',
-          message: 'Viewers can heavily steer the AI prompt. This can leak past chat content or generate misleading messages from your bot.',
-          fix: 'Keep the AI prompt mostly static and limit user input to small, clearly bounded fields (like one topic or username).'
+          message: 'User input feeds AI prompt.',
+          fix: 'Limit input scope.'
         });
       }
-
       if (/\$\(repeat/i.test(resp) &&
           /\$\((args|1|touser|sender\.lastmessage|user\.lastmessage)/i.test(resp)) {
         issues.push({
           severity: 'Medium',
           type: 'SpamAmplifier',
-          message: '$(repeat) is used with user-controlled text. This can amplify spam or repeat slash commands multiple times.',
-          fix: 'Avoid repeating raw user input, or cap repetition and add static prefixes to prevent output starting with `/`.'
+          message: '$(repeat) used with untrusted input.',
+          fix: 'Avoid repeating raw viewer input.'
         });
       }
     }
@@ -274,28 +288,24 @@
         issues.push({
           severity: 'Critical',
           type: 'TwitchCommandInjection',
-          message: 'Response begins with $(query)/$(1)/$(touser). A viewer could make Nightbot send Twitch slash commands as a mod.',
-          fix: 'Add static text before these variables (e.g. "You said: $(query)") or restrict this command to mods only.'
+          message: 'Response begins with $(query) or $(1).',
+          fix: 'Add static prefixes or restrict to mods.'
         });
       }
-
-      if (/\$\(eval/i.test(resp) &&
-          /\$\((query|querystring|[0-9])/i.test(resp)) {
+      if (/\$\(eval/i.test(resp) && /\$\((query|querystring|[0-9])/i.test(resp)) {
         issues.push({
           severity: 'High',
           type: 'EvalInjection',
-          message: 'User input flows into $(eval). This can lead to risky JavaScript execution in Nightbot\'s sandbox.',
-          fix: 'Avoid using $(eval) on raw viewer input. If you must use eval, only operate on strictly validated, whitelisted values.'
+          message: 'User input reaches $(eval).',
+          fix: 'Avoid eval on raw user input.'
         });
       }
-
-      if (/\$\(urlfetch/i.test(resp) &&
-          /\$\((query|querystring)/i.test(resp)) {
+      if (/\$\(urlfetch/i.test(resp) && /\$\((query|querystring)/i.test(resp)) {
         issues.push({
           severity: 'High',
           type: 'ExternalRequestInjection',
-          message: 'Viewers can control URLs fetched by $(urlfetch). This can be abused to reflect arbitrary external content into chat.',
-          fix: 'Use fixed URLs with limited, encoded parameters. Do not let viewers provide the full URL in $(urlfetch).'
+          message: 'User influences urlfetch URL.',
+          fix: 'Use fixed URLs and encoded parameters.'
         });
       }
     }
@@ -303,41 +313,32 @@
     return issues;
   }
 
-
   function renderResults(commands) {
     const rows = [];
-
     commands.forEach(cmd => {
-      if (!cmd.issues || !cmd.issues.length) return;
+      if (!cmd.issues.length) return;
       cmd.issues.forEach(issue => {
-        const sevClass = issue.severity.toLowerCase();
+        const cls = issue.severity.toLowerCase();
         rows.push(`
           <tr>
-            <td>${escapeHtml(cmd.provider)}</td>
-            <td><code>${escapeHtml(cmd.name)}</code></td>
-            <td>${escapeHtml(cmd.accessLevel || '')}</td>
+            <td>${escape(cmd.provider)}</td>
+            <td><code>${escape(cmd.name)}</code></td>
+            <td>${escape(cmd.accessLevel)}</td>
+            <td><span class="badge ${cls}">${issue.severity}</span><br><span class="small">${escape(issue.type)}</span></td>
             <td>
-              <span class="badge ${sevClass}">${issue.severity}</span><br>
-              <span class="small">${escapeHtml(issue.type)}</span>
-            </td>
-            <td>
-              <div class="small">${escapeHtml(issue.message)}</div>
-              <div class="small" style="margin-top:0.25rem;"><strong>Suggested fix:</strong> ${escapeHtml(issue.fix)}</div>
-              <div class="small" style="margin-top:0.25rem;"><strong>Current response:</strong> <code>${escapeHtml(shorten(cmd.response, 160))}</code></div>
+              <div class="small">${escape(issue.message)}</div>
+              <div class="small" style="margin-top:.25rem;"><strong>Fix:</strong> ${escape(issue.fix)}</div>
+              <div class="small" style="margin-top:.25rem;"><strong>Response:</strong> <code>${escape(shorten(cmd.response,160))}</code></div>
             </td>
           </tr>
         `);
       });
     });
-
     if (!rows.length) {
-      resultsBody.innerHTML = `
-        <p>No obvious high-risk patterns were detected in the parsed commands.</p>
-        <p class="small">This is a heuristic scan. Still double-check any commands that echo user input or call APIs.</p>
-      `;
+      resultsBody.innerHTML =
+        `<p>No major risks detected.</p><p class="small">Still review commands that echo user input.</p>`;
       return;
     }
-
     resultsBody.innerHTML = `
       <table>
         <thead>
@@ -346,22 +347,15 @@
             <th>Command</th>
             <th>Access</th>
             <th>Risk</th>
-            <th>Details / Fix</th>
+            <th>Details</th>
           </tr>
         </thead>
-        <tbody>
-          ${rows.join('')}
-        </tbody>
+        <tbody>${rows.join('')}</tbody>
       </table>
-      <p class="small" style="margin-top:0.5rem;">
-        Note: This is a heuristic scan. Always sanity-check your commands manually, especially ones that echo viewer input
-        or use built-in state-changing functions.
-      </p>
     `;
   }
 
-
-  function escapeHtml(str) {
+  function escape(str) {
     return (str || '').replace(/[&<>"'`]/g, s => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;',
       '"': '&quot;', "'": '&#39;', '`': '&#96;'
@@ -369,10 +363,9 @@
   }
 
   function shorten(str, max) {
-    if (!str) return '';
-    if (str.length <= max) return str;
-    return str.slice(0, max) + '…';
+    return (!str || str.length <= max) ? str : str.slice(0, max) + '…';
   }
 </script>
+
 </body>
 </html>
