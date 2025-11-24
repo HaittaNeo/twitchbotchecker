@@ -97,24 +97,33 @@
   <div class="card">
     <h1>Bot Command Safety Checker</h1>
     <p class="small">
-      Paste your StreamElements and Nightbot command pages below. This tool looks for risky
-      patterns like command injection, URL hijacking, eval abuse, and unsafe AI prompts.
-      All analysis runs locally in your browser.
+      Paste your <strong>StreamElements</strong> and/or <strong>Nightbot</strong> custom commands here, and this page
+      will flag risky patterns where viewers might be able to hijack your bot’s moderator powers or external calls.<br>
+      Everything runs <strong>locally in your browser</strong>. No commands are uploaded anywhere.
     </p>
   </div>
 
   <div class="card">
-    <h2>StreamElements</h2>
-    <p class="small">Copy the full custom commands table (including headers) and paste it here.</p>
-    <label for="seInput">StreamElements custom commands</label>
-    <textarea id="seInput"></textarea>
+    <h2>Step 1 – StreamElements (optional)</h2>
+    <ol class="small">
+      <li>Go to <code>https://streamelements.com/YOURUSERNAME/commands/custom</code> while logged in.</li>
+      <li>Switch to the view that shows your custom commands in a table.</li>
+      <li>Select the whole table (from <code>Command / Permissions / Response / Cost</code> downwards) and copy it (Ctrl+A, Ctrl+C if needed).</li>
+      <li>Paste it into the box below.</li>
+    </ol>
+    <label for="seInput">StreamElements custom commands table (tab-separated)</label>
+    <textarea id="seInput" placeholder="Paste your StreamElements commands table here..."></textarea>
   </div>
 
   <div class="card">
-    <h2>Nightbot</h2>
-    <p class="small">On Nightbot, press Ctrl+A then Ctrl+C on the commands page and paste it here.</p>
-    <label for="nbInput">Nightbot commands page content</label>
-    <textarea id="nbInput"></textarea>
+    <h2>Step 2 – Nightbot (optional)</h2>
+    <ol class="small">
+      <li>Go to <code>https://nightbot.tv/t/YOURUSERNAME/commands</code> while logged in.</li>
+      <li>Press <strong>Ctrl+A</strong> then <strong>Ctrl+C</strong> to copy the full commands list area (like the example you showed).</li>
+      <li>Paste it into the box below.</li>
+    </ol>
+    <label for="nbInput">Nightbot commands page content (multi-line, as copied)</label>
+    <textarea id="nbInput" placeholder="Paste your Nightbot commands page content here..."></textarea>
   </div>
 
   <div class="card">
