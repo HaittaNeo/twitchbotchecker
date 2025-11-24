@@ -97,23 +97,23 @@
   <div class="card">
     <h1>Bot Command Safety Checker</h1>
     <p class="small">
-      Paste your StreamElements and Nightbot command pages. This page detects dangerous patterns
-      like command injection, URL hijacking, eval abuse, and unsafe dynamic responses.
-      All processing happens locally in your browser.
+      Paste your StreamElements and Nightbot command pages below. This tool looks for risky
+      patterns like command injection, URL hijacking, eval abuse, and unsafe AI prompts.
+      All analysis runs locally in your browser.
     </p>
   </div>
 
   <div class="card">
     <h2>StreamElements</h2>
-    <p class="small">Copy the full custom commands table and paste it below.</p>
-    <label for="seInput">StreamElements commands</label>
+    <p class="small">Copy the full custom commands table (including headers) and paste it here.</p>
+    <label for="seInput">StreamElements custom commands</label>
     <textarea id="seInput"></textarea>
   </div>
 
   <div class="card">
     <h2>Nightbot</h2>
-    <p class="small">Copy the entire commands page (Ctrl+A, Ctrl+C) and paste it below.</p>
-    <label for="nbInput">Nightbot commands</label>
+    <p class="small">On Nightbot, press Ctrl+A then Ctrl+C on the commands page and paste it here.</p>
+    <label for="nbInput">Nightbot commands page content</label>
     <textarea id="nbInput"></textarea>
   </div>
 
@@ -142,14 +142,14 @@
     if (seText.trim()) commands.push(...parseTabbedCommands(seText, 'streamelements'));
     if (nbText.trim()) commands.push(...parseNightbotText(nbText));
     if (!commands.length) {
-      statusEl.textContent = 'No commands detected.';
+      statusEl.textContent = 'No commands detected. Make sure you pasted the tables/content correctly.';
       resultsCard.style.display = 'none';
       return;
     }
     const analyzed = analyzeAll(commands);
     renderResults(analyzed);
     resultsCard.style.display = 'block';
-    statusEl.textContent = 'Done.';
+    statusEl.textContent = 'Scan complete.';
   });
 
   function parseTabbedCommands(text, provider) {
@@ -159,7 +159,8 @@
       if (!raw.trim()) continue;
       const parts = raw.split('\t');
       if (parts.length < 3) continue;
-      if (parts[0].trim().toLowerCase() === 'command') continue;
+      const first = parts[0].trim().toLowerCase();
+      if (first === 'command') continue;
       if (!parts[0].trim().startsWith('!')) continue;
       cmds.push({
         provider,
@@ -175,13 +176,16 @@
     const cmds = [];
     const lines = text.split(/\r?\n/);
     let current = null;
-    const isPerm = l => /^(everyone|moderator|owner|regular|subscribers?|vip)/i.test(l);
+
+    const isPerm = l =>
+      /^(everyone|moderator|owner|regular|subscribers?|vip)/i.test(l);
+
     const ignore = l =>
       /^nightbot$/i.test(l) ||
       /commands are used/i.test(l) ||
       /^search commands/i.test(l) ||
       /^show\s+\d+/i.test(l) ||
-      /^page\s+\d+/i.test(l) ||
+      /^page\s+\d+\s+of\s+\d+/i.test(l) ||
       /^copyright/i.test(l) ||
       /terms of service/i.test(l) ||
       /privacy policy/i.test(l) ||
@@ -190,6 +194,7 @@
     for (const raw of lines) {
       const line = raw.trim();
       if (!line || ignore(line)) continue;
+
       if (line.startsWith('!')) {
         if (current && current.name && current.permission) {
           cmds.push({
@@ -202,10 +207,12 @@
         current = { name: line, response: '', permission: '' };
         continue;
       }
+
       if (current && isPerm(line)) {
         current.permission = line;
         continue;
       }
+
       if (current) {
         if (current.response) current.response += ' ';
         current.response += line;
@@ -220,6 +227,7 @@
         response: current.response.trim()
       });
     }
+
     return cmds;
   }
 
@@ -269,7 +277,7 @@
           severity: 'Medium',
           type: 'AIPromptControl',
           message: 'User input feeds AI prompt.',
-          fix: 'Limit input scope.'
+          fix: 'Limit input scope and keep prompts mostly static.'
         });
       }
       if (/\$\(repeat/i.test(resp) &&
@@ -278,7 +286,7 @@
           severity: 'Medium',
           type: 'SpamAmplifier',
           message: '$(repeat) used with untrusted input.',
-          fix: 'Avoid repeating raw viewer input.'
+          fix: 'Avoid repeating raw viewer input or cap repetitions.'
         });
       }
     }
@@ -324,7 +332,10 @@
             <td>${escape(cmd.provider)}</td>
             <td><code>${escape(cmd.name)}</code></td>
             <td>${escape(cmd.accessLevel)}</td>
-            <td><span class="badge ${cls}">${issue.severity}</span><br><span class="small">${escape(issue.type)}</span></td>
+            <td>
+              <span class="badge ${cls}">${issue.severity}</span><br>
+              <span class="small">${escape(issue.type)}</span>
+            </td>
             <td>
               <div class="small">${escape(issue.message)}</div>
               <div class="small" style="margin-top:.25rem;"><strong>Fix:</strong> ${escape(issue.fix)}</div>
@@ -334,11 +345,13 @@
         `);
       });
     });
+
     if (!rows.length) {
       resultsBody.innerHTML =
-        `<p>No major risks detected.</p><p class="small">Still review commands that echo user input.</p>`;
+        `<p>No major risks detected.</p><p class="small">Still review commands that echo user input or call external APIs.</p>`;
       return;
     }
+
     resultsBody.innerHTML = `
       <table>
         <thead>
